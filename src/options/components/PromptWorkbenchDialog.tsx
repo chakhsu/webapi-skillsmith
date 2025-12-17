@@ -210,11 +210,11 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                 <div className="flex-1 flex overflow-hidden">
                     {/* Left Panel: Settings & Input */}
                     <div className="w-[400px] border-r flex flex-col bg-muted/10">
-                        <div className="p-4 border-b">
+                        <div className="p-4 pt-2 pb-2 border-b">
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-full justify-between"
+                                className="w-full justify-between text-xs"
                                 onClick={() => setShowSettings(!showSettings)}
                             >
                                 <span className="flex items-center gap-2"><Settings2 className="h-4 w-4" /> {t('workbench.settings')}</span>
@@ -345,8 +345,8 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                         value={config.authType || 'api-key'}
                                                         onChange={(e) => saveConfig({ ...config, authType: e.target.value as 'bearer' | 'api-key' })}
                                                     >
-                                                        <option value="bearer">Bearer Token (Authorization Header)</option>
                                                         <option value="api-key">API Key (api-key Header)</option>
+                                                        <option value="bearer">Bearer Token (Authorization Header)</option>
                                                     </select>
                                                 </div>
                                             )}
