@@ -73,6 +73,7 @@ export default function Popup() {
             <div className="flex items-center gap-2">
                 <img src="/skillsmith-logo.svg" alt="Web API SkillSmith" className="w-5 h-5" />
                 <h1 className="text-lg font-medium">{t('title')}</h1>
+                <span className="text-xs text-muted-foreground">v{chrome.runtime.getManifest().version}</span>
             </div>
 
             {!isRecording ? (
