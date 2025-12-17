@@ -22,7 +22,7 @@
 - **Framework**: React + Vite + TypeScript
 - **Extension**: Manifest V3
 - **UI**: Shadcn UI + Tailwind CSS
-- **AI**: Integrated LLM Service (OpenAI, Azure, Custom/Qwen)
+- **AI**: Integrated LLM Service (OpenAI, Custom)
 
 ## 🚀 Getting Started
 
