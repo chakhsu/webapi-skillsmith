@@ -21,6 +21,24 @@
 - **持久化存储**：使用 IndexedDB 处理大规模数据集。
 - **国际化**：提供完整的英文与中文支持。
 
+## 📷 截图示例
+
+| Popup - Start | Popup - Processing |
+| :---: | :---: |
+| <img src="images/popup-start.png" width="200" /> | <img src="images/popup-processing.png" width="200" /> |
+
+| Console - Home | Console - No Sessions |
+| :---: | :---: |
+| <img src="images/console-home.png" width="400" /> | <img src="images/console-home-no-sessions.png" width="400" /> |
+
+| Console - Session Detail | Console - Session Detail - Request |
+| :---: | :---: |
+| <img src="images/console-session-detail.png" width="400" /> | <img src="images/console-session-detail-request.png" width="400" /> |
+
+| Prompt Workbench - Model Settings | Prompt Workbench - Prompt Template |
+| :---: | :---: |
+| <img src="images/workbench-model-settings.png" width="400" /> | <img src="images/workbench-prompt-template.png" width="400" /> |
+
 ## 🛠️ 技术栈
 
 - **框架**：React + Vite + TypeScript
