@@ -53,8 +53,9 @@ export default function Options() {
     return (
         <div className="min-h-screen bg-background text-foreground flex flex-col">
             <header className="border-b px-4 py-3 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10 transition-colors">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-lg font-bold tracking-tight">{t('title')}</h1>
+                <div className="flex items-center gap-2">
+                    <img src="/skillsmith-logo.svg" alt="Web API SkillSmith" className="w-6 h-6" />
+                    <h1 className="text-lg font-medium tracking-tight">{t('title')}</h1>
                 </div>
                 <div className="flex items-center gap-2">
                     <DropdownMenu>

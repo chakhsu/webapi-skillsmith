@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="public/skillsmith-logo.png" alt="Web API SkillSmith Logo" width="120" />
+</div>
+
 # Web API SkillSmith
 
 **Web API SkillSmith** is a Chrome Extension that bridges the gap between human web interaction and AI Agent capabilities. It tracks web operations, records API requests, and provides a powerful **Prompt Workbench** to generate tool definitions and system prompts for AI Agents.

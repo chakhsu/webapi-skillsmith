@@ -21,4 +21,9 @@ export default defineManifest({
     service_worker: 'src/background/index.ts',
     type: 'module',
   },
+  icons: {
+    16: 'skillsmith-logo.png',
+    48: 'skillsmith-logo.png',
+    128: 'skillsmith-logo.png',
+  },
 })

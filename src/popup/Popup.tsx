@@ -10,12 +10,6 @@ export default function Popup() {
     const [recordCount, setRecordCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        checkStatus();
-        const interval = setInterval(checkStatus, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
     const checkStatus = async () => {
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tabs.length === 0 || !tabs[0].id) return;
@@ -23,22 +17,24 @@ export default function Popup() {
 
         chrome.runtime.sendMessage({ type: 'GET_STATUS', tabId }, (response) => {
             setLoading(false);
-            // response might be undefined if background is inactive (unlikely for persistence) or error
             if (chrome.runtime.lastError) {
-                // ignore
                 return;
             }
             if (response && response.recording) {
                 setIsRecording(true);
                 setRecordCount(response.count);
-                // Only set description if we didn't have one (or sync it?)
-                // If user is typing, we shouldn't overwrite unless we just switched to recording state
                 if (!isRecording) setDescription(response.description);
             } else {
                 setIsRecording(false);
             }
         });
     };
+
+    useEffect(() => {
+        checkStatus();
+        const interval = setInterval(checkStatus, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleStart = async () => {
         const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -74,7 +70,10 @@ export default function Popup() {
 
     return (
         <div className="p-3 w-80 space-y-3">
-            <h1 className="text-lg font-bold">{t('title')}</h1>
+            <div className="flex items-center gap-2">
+                <img src="/skillsmith-logo.svg" alt="Web API SkillSmith" className="w-5 h-5" />
+                <h1 className="text-lg font-medium">{t('title')}</h1>
+            </div>
 
             {!isRecording ? (
                 <div className="space-y-3">
