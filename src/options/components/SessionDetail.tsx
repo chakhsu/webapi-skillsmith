@@ -21,8 +21,40 @@ export default function SessionDetail({ sessionId, onBack }: Props) {
     const [selectedRecord, setSelectedRecord] = useState<DbHttpRecord | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isWorkbenchOpen, setIsWorkbenchOpen] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     if (!session || !records) return <div className="p-10 text-center">{t('loading')}</div>;
+
+    const handleSelectAll = () => {
+        if (selectedIds.size === records.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(records.map(r => r.id)));
+        }
+    };
+
+    const handleSelectOne = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleDeleteSelected = async () => {
+        if (!session || selectedIds.size === 0) return;
+
+        if (!confirm(t('confirm_delete_selected', { count: selectedIds.size }))) return;
+
+        await db.records.bulkDelete(Array.from(selectedIds));
+        await db.sessions.update(session.id, {
+            recordCount: Math.max(0, session.recordCount - selectedIds.size)
+        });
+
+        setSelectedIds(new Set());
+    };
 
     const handleExport = () => {
         const lines = records.map(r => JSON.stringify({
@@ -81,6 +113,12 @@ export default function SessionDetail({ sessionId, onBack }: Props) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    {selectedIds.size > 0 && (
+                        <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={handleDeleteSelected}>
+                            <Trash2 className="w-3 h-3 mr-2" />
+                            {t('delete_selected', { count: selectedIds.size })}
+                        </Button>
+                    )}
                     <Button variant="secondary" size="sm" className="h-7 text-xs" onClick={onBack}>
                         <ArrowLeft className="w-3 h-3 mr-2" />
                         {t('back')}
@@ -105,6 +143,14 @@ export default function SessionDetail({ sessionId, onBack }: Props) {
                 <table className="w-full text-xs">
                     <thead className="bg-muted/50 border-b">
                         <tr>
+                            <th className="h-8 px-3 text-left align-middle w-8">
+                                <input
+                                    type="checkbox"
+                                    className="translate-y-[2px]"
+                                    checked={records.length > 0 && selectedIds.size === records.length}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             <th className="h-8 px-3 text-left align-middle font-medium text-muted-foreground w-20">{t('table_headers.method')}</th>
                             <th className="h-8 px-3 text-left align-middle font-medium text-muted-foreground">{t('table_headers.url')}</th>
                             <th className="h-8 px-3 text-left align-middle font-medium text-muted-foreground w-24">{t('table_headers.status')}</th>
@@ -119,6 +165,14 @@ export default function SessionDetail({ sessionId, onBack }: Props) {
                                 className="border-b transition-colors hover:bg-muted/50 cursor-pointer data-[state=selected]:bg-muted group"
                                 onClick={() => handleRowClick(r)}
                             >
+                                <td className="p-2 px-3 align-middle" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                        type="checkbox"
+                                        className="translate-y-[2px]"
+                                        checked={selectedIds.has(r.id)}
+                                        onChange={() => handleSelectOne(r.id)}
+                                    />
+                                </td>
                                 <td className="p-2 px-3 align-middle font-medium">{r.method}</td>
                                 <td className="p-2 px-3 align-middle max-w-[400px] truncate font-mono text-[11px]" title={r.url}>{r.url}</td>
                                 <td className="p-2 px-3 align-middle">

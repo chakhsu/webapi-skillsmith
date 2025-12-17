@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Play, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText } from 'lucide-react';
+import { X, Play, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser } from 'lucide-react';
 import { LLMService } from '@/lib/llm';
 import type { LLMConfig, LLMProviderType } from '@/lib/llm';
 import { db } from '@/lib/db';
@@ -231,7 +231,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                     >
                                         <div className="flex items-center gap-1">
                                             <Settings2 className="h-3 w-3" />
-                                            {t('workbench.settings')}
+                                            {t('workbench.model_settings')}
                                         </div>
                                     </button>
                                     <button
@@ -486,7 +486,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                     <Copy className="h-3 w-3 mr-1.5" /> {t('workbench.copy')}
                                 </Button>
                                 <Button variant="ghost" size="sm" className="h-6 text-xs hover:bg-accent hover:text-accent-foreground" onClick={() => setGeneratedPrompt('')}>
-                                    <RotateCcw className="h-3 w-3 mr-1.5" /> {t('workbench.reset_output')}
+                                    <Eraser className="h-3 w-3 mr-1.5" /> {t('workbench.reset_output')}
                                 </Button>
                             </div>
                         </div>
