@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Play, CircleStop, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -85,10 +86,12 @@ export default function Popup() {
                         className="min-h-[72px] text-xs resize-none"
                     />
                     <div className="grid grid-cols-2 gap-2">
-                        <Button onClick={handleStart} className="w-full h-9">
+                        <Button onClick={handleStart} className="w-full h-7 text-xs">
+                            <Play className="w-3 h-3 inline-block mr-1" />
                             {t('start')}
                         </Button>
-                        <Button variant="outline" onClick={openDashboard} className="w-full h-9">
+                        <Button variant="outline" onClick={openDashboard} className="w-full h-7 text-xs">
+                            <LayoutDashboard className="w-3 h-3 inline-block mr-1" />
                             {t('open_dashboard')}
                         </Button>
                     </div>
@@ -108,10 +111,12 @@ export default function Popup() {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                        <Button variant="destructive" onClick={handleStop} className="w-full h-9">
+                        <Button variant="destructive" onClick={handleStop} className="w-full h-7 text-xs">
+                            <CircleStop className="w-3 h-3 inline-block mr-1" />
                             {t('stop')}
                         </Button>
-                        <Button variant="ghost" onClick={openDashboard} className="w-full h-9">
+                        <Button variant="outline" onClick={openDashboard} className="w-full h-7 text-xs">
+                            <LayoutDashboard className="w-3 h-3 inline-block mr-1" />
                             {t('open_dashboard')}
                         </Button>
                     </div>
