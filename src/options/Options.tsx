@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Laptop, Languages, Check } from 'lucide-react';
+import { Moon, Sun, Laptop, Languages, Check, Github } from 'lucide-react';
 import SessionList from './components/SessionList';
 import SessionDetail from './components/SessionDetail';
 import { storage } from '@/lib/storage';
@@ -116,7 +116,11 @@ export default function Options() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* Back button moved to SessionDetail */}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                        <a href="https://github.com/chakhsu/webapi-skillsmith" target="_blank" rel="noopener noreferrer">
+                            <Github className="h-4 w-4" />
+                        </a>
+                    </Button>
                 </div>
             </header>
 
