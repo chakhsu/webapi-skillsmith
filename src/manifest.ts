@@ -3,7 +3,7 @@ import { defineManifest } from '@crxjs/vite-plugin'
 export default defineManifest({
   manifest_version: 3,
   name: 'Web API SkillSmith',
-  version: '1.0.0',
+  version: '1.1.0',
   description: 'Track web operations and record API requests to generate AI Agent skills.',
   permissions: [
     'debugger',
