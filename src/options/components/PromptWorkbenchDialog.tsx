@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Play, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare, Braces } from 'lucide-react';
+import { X, PartyPopper, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare, Braces } from 'lucide-react';
 import { LLMService } from '@/lib/llm';
 import type { LLMConfig, LLMProviderType } from '@/lib/llm';
 import { db } from '@/lib/db';
@@ -47,14 +47,14 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
         modelName: '',
         metaPromptTemplate: DEFAULT_META_PROMPT_TEMPLATE
     });
-    const [activeTab, setActiveTab] = useState<'model' | 'template' | 'history'>('model');
+    const [activeSection, setActiveSection] = useState<'settings' | 'history' | null>('settings');
+    const [settingsTab, setSettingsTab] = useState<'model' | 'template'>('model');
     const [requirements, setRequirements] = useState('');
     const [generatedPrompt, setGeneratedPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [isTesting, setIsTesting] = useState(false);
     const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [testError, setTestError] = useState<string | null>(null);
-    const [showSettings, setShowSettings] = useState(true);
     const [history, setHistory] = useState<DbGeneratedPrompt[]>([]);
     const [showPreview, setShowPreview] = useState(false);
 
@@ -98,10 +98,10 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
     };
 
     useEffect(() => {
-        if (isOpen && activeTab === 'history') {
+        if (isOpen && activeSection === 'history') {
             loadHistory();
         }
-    }, [isOpen, activeTab]);
+    }, [isOpen, activeSection]);
 
     useEffect(() => {
         const saved = localStorage.getItem(STORAGE_KEY_LLM_CONFIG);
@@ -164,12 +164,12 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                     modelName: config.modelName || 'gpt-4o'
                 });
                 // Refresh history if we are on that tab (though we switch view usually)
-                if (activeTab === 'history') loadHistory();
+                if (activeSection === 'history') loadHistory();
             } catch (e) {
                 console.error("Failed to save prompt history", e);
             }
 
-            setShowSettings(false); // Auto hide settings on success
+            setActiveSection(null); // Auto hide settings on success
         } catch (e) {
             console.error(e);
             alert("Generation failed. Check console for details.");
@@ -187,7 +187,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
                     <div className="flex items-center gap-2">
                         <div className="p-1.5 bg-primary/10 rounded-md">
-                            <Sparkles className="h-4 w-4 text-primary" />
+                            <PartyPopper className="h-5 w-5 text-primary" />
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold leading-none">{t('workbench.title')}</h2>
@@ -218,24 +218,33 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                 <div className="flex-1 flex overflow-hidden">
                     {/* Left Panel: Settings & Input */}
                     <div className="w-[400px] border-r flex flex-col bg-muted/10">
-                        <div className="p-4 pt-2 pb-2 border-b">
+                        <div className="p-4 pt-2 pb-2 border-b grid grid-cols-2 gap-2">
                             <Button
-                                variant="outline"
+                                variant={activeSection === 'settings' ? "secondary" : "outline"}
                                 size="sm"
-                                className="w-full justify-between text-xs"
-                                onClick={() => setShowSettings(!showSettings)}
+                                className={`text-xs justify-start ${activeSection === 'settings' ? 'bg-muted shadow-inner' : ''}`}
+                                onClick={() => setActiveSection(activeSection === 'settings' ? null : 'settings')}
                             >
-                                <span className="flex items-center gap-2"><Settings2 className="h-4 w-4" /> {t('workbench.settings')}</span>
-                                {showSettings ? t('workbench.hide') : t('workbench.show')}
+                                <Settings2 className="h-4 w-4 mr-2" />
+                                {t('workbench.settings')}
+                            </Button>
+                            <Button
+                                variant={activeSection === 'history' ? "secondary" : "outline"}
+                                size="sm"
+                                className={`text-xs justify-start ${activeSection === 'history' ? 'bg-muted shadow-inner' : ''}`}
+                                onClick={() => setActiveSection(activeSection === 'history' ? null : 'history')}
+                            >
+                                <HistoryIcon className="h-4 w-4 mr-2" />
+                                {t('workbench.history')}
                             </Button>
                         </div>
 
-                        {showSettings && (
+                        {activeSection === 'settings' && (
                             <div className="flex flex-col border-b bg-muted/30">
                                 <div className="flex gap-4 px-4 pt-3 border-b">
                                     <button
-                                        className={`text-xs font-medium pb-2 border-b-2 transition-colors ${activeTab === 'model' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-                                        onClick={() => setActiveTab('model')}
+                                        className={`text-xs font-medium pb-2 border-b-2 transition-colors ${settingsTab === 'model' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                        onClick={() => setSettingsTab('model')}
                                     >
                                         <div className="flex items-center gap-1">
                                             <BotMessageSquare className="h-3 w-3" />
@@ -243,77 +252,17 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                         </div>
                                     </button>
                                     <button
-                                        className={`text-xs font-medium pb-2 border-b-2 transition-colors ${activeTab === 'template' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-                                        onClick={() => setActiveTab('template')}
+                                        className={`text-xs font-medium pb-2 border-b-2 transition-colors ${settingsTab === 'template' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                        onClick={() => setSettingsTab('template')}
                                     >
                                         <div className="flex items-center gap-1">
                                             <FileText className="h-3 w-3" />
                                             {t('workbench.template')}
                                         </div>
                                     </button>
-                                    <button
-                                        className={`text-xs font-medium pb-2 border-b-2 transition-colors ${activeTab === 'history' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-                                        onClick={() => setActiveTab('history')}
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            <HistoryIcon className="h-3 w-3" />
-                                            {t('workbench.history')}
-                                        </div>
-                                    </button>
                                 </div>
 
-                                {activeTab === 'history' ? (
-                                    <div className="overflow-y-auto p-4 space-y-3 h-[400px]">
-                                        {history.length === 0 ? (
-                                            <div className="text-center py-8 text-muted-foreground text-xs">
-                                                {t('workbench.history_empty')}
-                                            </div>
-                                        ) : (
-                                            history.map(item => (
-                                                <div key={item.id} className="p-3 bg-background border rounded-lg hover:shadow-sm transition-shadow group">
-                                                    <div className="flex items-start justify-between mb-2">
-                                                        <div>
-                                                            <div className="text-[10px] font-medium text-primary mb-0.5">{new Date(item.createdAt).toLocaleString()}</div>
-                                                            <div className="text-xs font-semibold truncate max-w-[200px]" title={item.contextName}>{item.contextName}</div>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                                                                onClick={() => {
-                                                                    setGeneratedPrompt(item.promptContent);
-                                                                    setShowSettings(false);
-                                                                }}
-                                                                title={t('workbench.view')}
-                                                            >
-                                                                <Eye className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                                onClick={async (e) => {
-                                                                    e.stopPropagation();
-                                                                    if (confirm('Delete this history item?')) {
-                                                                        await db.generatedPrompts.delete(item.id!);
-                                                                        loadHistory();
-                                                                    }
-                                                                }}
-                                                                title={t('workbench.delete')}
-                                                            >
-                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                                        <span className="bg-muted px-1.5 py-0.5 rounded text-xs">{item.modelName}</span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                ) : activeTab === 'model' ? (
+                                {settingsTab === 'model' ? (
                                     <div className="p-4 pt-2 space-y-4">
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1.5">
@@ -459,6 +408,60 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                             </div>
                         )}
 
+                        {activeSection === 'history' && (
+                            <div className="flex flex-col border-b bg-muted/30">
+                                <div className="overflow-y-auto p-4 pt-2 pb-2 space-y-3 h-[400px]">
+                                    {history.length === 0 ? (
+                                        <div className="text-center py-8 text-muted-foreground text-xs">
+                                            {t('workbench.history_empty')}
+                                        </div>
+                                    ) : (
+                                        history.map(item => (
+                                            <div key={item.id} className="p-3 bg-background border rounded-lg hover:shadow-sm transition-shadow group">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <div className="text-[10px] font-medium text-primary mb-0.5">{new Date(item.createdAt).toLocaleString()}</div>
+                                                        <div className="text-xs font-semibold truncate max-w-[200px]" title={item.contextName}>{item.contextName}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                            onClick={() => {
+                                                                setGeneratedPrompt(item.promptContent);
+                                                            }}
+                                                            title={t('workbench.view')}
+                                                        >
+                                                            <Eye className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (confirm('Delete this history item?')) {
+                                                                    await db.generatedPrompts.delete(item.id!);
+                                                                    loadHistory();
+                                                                }
+                                                            }}
+                                                            title={t('workbench.delete')}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                                    <span className="bg-muted px-1.5 py-0.5 rounded text-xs">{item.modelName}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex-1 p-4 flex flex-col gap-3 min-h-0">
                             <div className="space-y-1.5 flex-1 flex flex-col min-h-0">
                                 <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.requirements')}</label>
@@ -487,7 +490,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                         </>
                                     ) : (
                                         <>
-                                            <Play className="mr-2 h-4 w-4" />
+                                            <Sparkles className="mr-2 h-4 w-4" />
                                             {t('workbench.generate')}
                                         </>
                                     )}
