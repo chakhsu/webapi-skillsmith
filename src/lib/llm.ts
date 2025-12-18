@@ -17,6 +17,19 @@ export interface CompletionResponse {
     content: string;
 }
 
+type ChatMessage = {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+};
+
+type ChatCompletionRequestBody = {
+    model: string;
+    messages: ChatMessage[];
+    stream: false;
+    max_tokens?: number;
+    temperature?: number;
+};
+
 export class LLMService {
     private config: LLMConfig;
 
@@ -28,21 +41,24 @@ export class LLMService {
         try {
             await this.generate("Hello, are you there?", "system");
             return { success: true };
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error("Connection test failed:", e);
-            return { success: false, error: e.message || String(e) };
+            if (e instanceof Error) {
+                return { success: false, error: e.message };
+            }
+            return { success: false, error: String(e) };
         }
     }
 
     async generate(prompt: string, systemPrompt?: string): Promise<string> {
         const { apiKey, baseUrl, modelName, maxTokens, temperature, authType } = this.config;
-        
 
-        
+
+
         // User requested simple implementation: baseUrl IS the full URL.
         // If not provided, default to standard OpenAI endpoint.
         const url = baseUrl || 'https://api.openai.com/v1/chat/completions';
-        
+
         const headers: Record<string, string> = {
             'Content-Type': 'application/json'
         };
@@ -54,7 +70,9 @@ export class LLMService {
             headers['Authorization'] = `Bearer ${apiKey}`;
         }
 
-        const body: any = {
+
+        const body: ChatCompletionRequestBody = {
+            model: modelName || 'gpt-4o',
             messages: [
                 { role: 'user', content: prompt }
             ],
@@ -65,8 +83,6 @@ export class LLMService {
             body.messages.unshift({ role: 'system', content: systemPrompt });
         }
 
-        body.model = modelName || 'gpt-4o';
-        
         if (maxTokens !== undefined && maxTokens !== null && !isNaN(maxTokens)) {
             body.max_tokens = maxTokens;
         }

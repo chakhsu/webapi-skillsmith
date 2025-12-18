@@ -3,10 +3,10 @@ export interface HttpRecord {
   url: string;
   method: string;
   requestHeaders: Record<string, string>;
-  requestBody?: any;
+  requestBody?: unknown;
   responseStatus?: number;
   responseHeaders?: Record<string, string>;
-  responseBody?: any;
+  responseBody?: unknown;
   timestamp: number;
 }
 
@@ -16,6 +16,7 @@ export interface Session {
   startTime: number;
   endTime?: number;
   domain: string;
+  groupName?: string;
   // records are loaded separately from DB usually, but for export we might attach them
   records?: HttpRecord[];
 }

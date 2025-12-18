@@ -34,18 +34,33 @@ function CollapsibleSection({ title, children, defaultOpen = true }: { title: st
 export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Props) {
     const { t } = useTranslation('options');
 
-    const formatBody = (body: any) => {
-        try {
-            if (typeof body === 'string' && (body.trim().startsWith('{') || body.trim().startsWith('['))) {
-                return JSON.stringify(JSON.parse(body), null, 2);
+    const formatBody = (body: unknown): string => {
+        if (body == null) return '';
+        if (typeof body === 'string') {
+            const trimmed = body.trim();
+            try {
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    return JSON.stringify(JSON.parse(trimmed), null, 2);
+                }
+            } catch {
+                return trimmed;
             }
-            return typeof body === 'object' ? JSON.stringify(body, null, 2) : body;
-        } catch {
-            return body;
+            return trimmed;
         }
+        if (typeof body === 'object') {
+            try {
+                return JSON.stringify(body, null, 2);
+            } catch {
+                return String(body);
+            }
+        }
+        return String(body);
     };
 
     if (!isOpen || !record) return null;
+
+    const hasRequestBody = record.requestBody !== undefined && record.requestBody !== null;
+    const hasResponseBody = record.responseBody !== undefined && record.responseBody !== null;
 
     return (
         <div className="fixed inset-0 z-[100] flex justify-end !m-0">
@@ -103,7 +118,7 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
                                     </div>
                                 </div>
                             )}
-                            {record.requestBody && (
+                            {hasRequestBody && (
                                 <div className="border rounded-md overflow-hidden">
                                     <div className="bg-muted/50 px-3 py-1.5 border-b text-[10px] font-bold text-muted-foreground uppercase">Body</div>
                                     <div className="p-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto bg-card">
@@ -111,7 +126,7 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
                                     </div>
                                 </div>
                             )}
-                            {!record.requestBody && (!record.requestHeaders || Object.keys(record.requestHeaders).length === 0) && (
+                            {!hasRequestBody && (!record.requestHeaders || Object.keys(record.requestHeaders).length === 0) && (
                                 <div className="text-xs text-muted-foreground italic pl-2">No request details available.</div>
                             )}
                         </CollapsibleSection>
@@ -126,7 +141,7 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
                                     </div>
                                 </div>
                             )}
-                            {record.responseBody && (
+                            {hasResponseBody && (
                                 <div className="border rounded-md overflow-hidden">
                                     <div className="bg-muted/50 px-3 py-1.5 border-b text-[10px] font-bold text-muted-foreground uppercase">Body</div>
                                     <div className="p-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto bg-card">
@@ -134,7 +149,7 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
                                     </div>
                                 </div>
                             )}
-                            {!record.responseBody && (!record.responseHeaders || Object.keys(record.responseHeaders).length === 0) && (
+                            {!hasResponseBody && (!record.responseHeaders || Object.keys(record.responseHeaders).length === 0) && (
                                 <div className="text-xs text-muted-foreground italic pl-2">No response details available.</div>
                             )}
                         </CollapsibleSection>

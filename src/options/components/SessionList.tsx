@@ -20,11 +20,11 @@ export default function SessionList({ onSelect }: Props) {
     // Workbench state
     const [isWorkbenchOpen, setIsWorkbenchOpen] = useState(false);
     const [workbenchContext, setWorkbenchContext] = useState<WorkbenchContext | null>(null);
-    const [isLoadingDomain, setIsLoadingDomain] = useState<string | null>(null);
+    const [isLoadingGroup, setIsLoadingGroup] = useState<string | null>(null);
 
-    const handleDomainPrompt = async (domain: string, sessionList: typeof sessions) => {
+    const handleDomainPrompt = async (groupKey: string, sessionList: typeof sessions) => {
         if (!sessionList) return;
-        setIsLoadingDomain(domain);
+        setIsLoadingGroup(groupKey);
         try {
             const sessionIds = sessionList.map(s => s.id);
             // Fetch all records for these sessions
@@ -32,7 +32,7 @@ export default function SessionList({ onSelect }: Props) {
 
             setWorkbenchContext({
                 type: 'domain',
-                name: `Domain: ${domain}`,
+                name: groupKey,
                 sessions: sessionList.map(s => ({ id: s.id, description: s.description, startTime: s.startTime })),
                 records: records
             });
@@ -40,7 +40,7 @@ export default function SessionList({ onSelect }: Props) {
         } catch (e) {
             console.error("Failed to load records for domain", e);
         } finally {
-            setIsLoadingDomain(null);
+            setIsLoadingGroup(null);
         }
     };
 
@@ -62,11 +62,15 @@ export default function SessionList({ onSelect }: Props) {
         );
     }
 
-    // Group by domain
     const grouped = sessions.reduce((acc, session) => {
-        const domain = session.domain || 'Unknown';
-        if (!acc[domain]) acc[domain] = [];
-        acc[domain].push(session);
+        let key = session.domain || 'Unknown';
+        if (session.groupName && session.groupName.trim()) {
+            const domain = session.domain || 'Unknown';
+            key = `${session.groupName.trim()} (${domain})`;
+        }
+
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(session);
         return acc;
     }, {} as Record<string, typeof sessions>);
 
@@ -93,12 +97,12 @@ export default function SessionList({ onSelect }: Props) {
 
     return (
         <div className="space-y-8">
-            {Object.entries(grouped).map(([domain, list]) => (
-                <div key={domain} className="space-y-3">
+            {Object.entries(grouped).map(([groupKey, list]) => (
+                <div key={groupKey} className="space-y-3">
                     <div className="flex items-center justify-between px-1">
                         <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4 text-primary" />
-                            <h2 className="text-base font-semibold tracking-tight">{domain}</h2>
+                            <h2 className="text-base font-semibold tracking-tight">{groupKey}</h2>
                             <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
                                 {list.length}
                             </span>
@@ -107,10 +111,10 @@ export default function SessionList({ onSelect }: Props) {
                             variant="secondary"
                             size="sm"
                             className="h-7 text-xs"
-                            onClick={() => handleDomainPrompt(domain, list)}
-                            disabled={isLoadingDomain === domain}
+                            onClick={() => handleDomainPrompt(groupKey, list)}
+                            disabled={isLoadingGroup === groupKey}
                         >
-                            {isLoadingDomain === domain ? (
+                            {isLoadingGroup === groupKey ? (
                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-2"></div>
                             ) : (
                                 <Sparkles className="w-3 h-3 mr-2 text-primary" />

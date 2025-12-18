@@ -6,7 +6,8 @@ interface RecordingSession {
   sessionId: string;
   tabId: number;
   description: string;
-  domain: string; // Add domain property
+  domain: string;
+  groupName?: string;
   startTime: number;
   pendingRecords: Map<string, Partial<HttpRecord>>;
   recordCount: number;
@@ -14,7 +15,7 @@ interface RecordingSession {
 
 const sessions = new Map<number, RecordingSession>();
 
-export async function startRecording(tabId: number, description: string) {
+export async function startRecording(tabId: number, description: string, groupName?: string) {
   if (sessions.has(tabId)) {
     console.warn(`Already recording on tab ${tabId}`);
     return;
@@ -26,7 +27,7 @@ export async function startRecording(tabId: number, description: string) {
 
     const sessionId = crypto.randomUUID();
     const startTime = Date.now();
-    
+
     // Get URL of the tab
     const tab = await chrome.tabs.get(tabId);
     let domain = '';
@@ -41,6 +42,7 @@ export async function startRecording(tabId: number, description: string) {
       description,
       startTime,
       domain,
+      groupName,
       recordCount: 0
     };
 
@@ -50,7 +52,8 @@ export async function startRecording(tabId: number, description: string) {
       sessionId,
       tabId,
       description,
-      domain, // Add domain
+      domain,
+      groupName,
       startTime,
       pendingRecords: new Map(),
       recordCount: 0
@@ -96,16 +99,40 @@ export function getRecordingState(tabId: number) {
   };
 }
 
-export async function onNetworkEvent(debuggeeId: chrome.debugger.Debuggee, message: string, params: any) {
+type NetworkRequestWillBeSentParams = {
+  requestId: string;
+  request: {
+    url: string;
+    method: string;
+    headers: Record<string, string>;
+    postData?: string;
+  };
+  wallTime: number;
+};
+
+type NetworkResponseReceivedParams = {
+  requestId: string;
+  response: {
+    status: number;
+    headers: Record<string, string>;
+  };
+};
+
+type NetworkLoadingFinishedParams = {
+  requestId: string;
+};
+
+export async function onNetworkEvent(debuggeeId: chrome.debugger.Debuggee, message: string, params?: object) {
   const tabId = debuggeeId.tabId;
   if (!tabId || !sessions.has(tabId)) return;
+  if (!params) return;
 
   const session = sessions.get(tabId)!;
   const { pendingRecords, sessionId } = session;
 
   if (message === 'Network.requestWillBeSent') {
-    const { requestId, request, wallTime } = params;
-    
+    const { requestId, request, wallTime } = params as NetworkRequestWillBeSentParams;
+
     // Domain Filtering
     try {
         const url = new URL(request.url);
@@ -115,8 +142,7 @@ export async function onNetworkEvent(debuggeeId: chrome.debugger.Debuggee, messa
         if (session.domain && !url.hostname.endsWith(session.domain)) {
             return;
         }
-    } catch (e) {
-        // invalid url, ignore
+    } catch {
         return;
     }
 
@@ -130,24 +156,28 @@ export async function onNetworkEvent(debuggeeId: chrome.debugger.Debuggee, messa
       timestamp: wallTime * 1000
     };
     pendingRecords.set(requestId, record);
-    
+
   } else if (message === 'Network.responseReceived') {
-    const { requestId, response } = params;
+    const { requestId, response } = params as NetworkResponseReceivedParams;
     const record = pendingRecords.get(requestId);
     if (record) {
       record.responseStatus = response.status;
       record.responseHeaders = response.headers;
     }
   } else if (message === 'Network.loadingFinished') {
-    const { requestId } = params;
+    const { requestId } = params as NetworkLoadingFinishedParams;
     const record = pendingRecords.get(requestId);
     if (record) {
       // Try to get response body
       try {
-        const result: any = await chrome.debugger.sendCommand({ tabId }, 'Network.getResponseBody', { requestId });
+        const result = await chrome.debugger.sendCommand(
+          { tabId },
+          'Network.getResponseBody',
+          { requestId }
+        ) as { body?: string };
         record.responseBody = result.body;
-      } catch (e) {
-        // Body might not be available
+      } catch {
+        console.warn('Failed to get response body');
       }
 
       // Finalize record
@@ -162,18 +192,17 @@ export async function onNetworkEvent(debuggeeId: chrome.debugger.Debuggee, messa
       if (!finalRecord.timestamp) finalRecord.timestamp = Date.now();
 
       await db.records.add(finalRecord);
-      
+
       // Update count in DB
       await db.sessions.where('id').equals(sessionId).modify(s => { s.recordCount += 1; });
-      
+
       // Update local state
       session.recordCount += 1;
-      
+
       pendingRecords.delete(requestId);
-      
+
       // Broadcast update?
       chrome.runtime.sendMessage({ type: 'RECORD_ADDED', sessionId, count: session.recordCount });
     }
   }
 }
-

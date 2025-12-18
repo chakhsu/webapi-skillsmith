@@ -5,6 +5,7 @@
         "stop": "结束记录",
         "open_dashboard": "进入后台",
         "description_placeholder": "输入操作描述...",
+        "group_placeholder": "输入分组名（可选）...",
         "records_captured": "已捕获请求: {{count}}",
         "recording": "正在记录...",
         "loading": "加载中...",

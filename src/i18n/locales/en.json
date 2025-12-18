@@ -5,6 +5,7 @@
         "stop": "Stop Recording",
         "open_dashboard": "Open Console",
         "description_placeholder": "Enter operation description...",
+        "group_placeholder": "Enter group name (optional)...",
         "records_captured": "Records Captured: {{count}}",
         "recording": "Recording...",
         "loading": "Loading...",

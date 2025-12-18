@@ -105,9 +105,9 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                 setTestStatus('error');
                 setTestError(result.error || 'Unknown error');
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             setTestStatus('error');
-            setTestError(e.message || String(e));
+            setTestError(e instanceof Error ? e.message : String(e));
         } finally {
             setIsTesting(false);
         }

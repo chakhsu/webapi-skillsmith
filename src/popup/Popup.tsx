@@ -3,35 +3,37 @@ import { useTranslation } from 'react-i18next';
 import { Play, CircleStop, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 export default function Popup() {
     const { t } = useTranslation('popup');
     const [description, setDescription] = useState('');
+    const [groupName, setGroupName] = useState('');
     const [isRecording, setIsRecording] = useState(false);
     const [recordCount, setRecordCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    const checkStatus = async () => {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tabs.length === 0 || !tabs[0].id) return;
-        const tabId = tabs[0].id;
-
-        chrome.runtime.sendMessage({ type: 'GET_STATUS', tabId }, (response) => {
-            setLoading(false);
-            if (chrome.runtime.lastError) {
-                return;
-            }
-            if (response && response.recording) {
-                setIsRecording(true);
-                setRecordCount(response.count);
-                if (!isRecording) setDescription(response.description);
-            } else {
-                setIsRecording(false);
-            }
-        });
-    };
-
     useEffect(() => {
+        const checkStatus = async () => {
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tabs.length === 0 || !tabs[0].id) return;
+            const tabId = tabs[0].id;
+
+            chrome.runtime.sendMessage({ type: 'GET_STATUS', tabId }, (response) => {
+                setLoading(false);
+                if (chrome.runtime.lastError) {
+                    return;
+                }
+                if (response && response.recording) {
+                    setIsRecording(true);
+                    setRecordCount(response.count);
+                    setDescription(response.description);
+                } else {
+                    setIsRecording(false);
+                }
+            });
+        };
+
         checkStatus();
         const interval = setInterval(checkStatus, 1000);
         return () => clearInterval(interval);
@@ -42,7 +44,7 @@ export default function Popup() {
         if (tabs.length === 0 || !tabs[0].id) return;
         const tabId = tabs[0].id;
 
-        chrome.runtime.sendMessage({ type: 'START_RECORDING', tabId, description }, (res) => {
+        chrome.runtime.sendMessage({ type: 'START_RECORDING', tabId, description, groupName }, (res) => {
             if (res && res.success) {
                 setIsRecording(true);
                 setRecordCount(0);
@@ -79,6 +81,12 @@ export default function Popup() {
 
             {!isRecording ? (
                 <div className="space-y-3">
+                    <Input
+                        placeholder={t('group_placeholder')}
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        className="h-8 text-xs"
+                    />
                     <Textarea
                         placeholder={t('description_placeholder')}
                         value={description}
@@ -110,16 +118,10 @@ export default function Popup() {
                             </div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button variant="destructive" onClick={handleStop} className="w-full h-7 text-xs">
-                            <CircleStop className="w-3 h-3 inline-block mr-1" />
-                            {t('stop')}
-                        </Button>
-                        <Button variant="outline" onClick={openDashboard} className="w-full h-7 text-xs">
-                            <LayoutDashboard className="w-3 h-3 inline-block mr-1" />
-                            {t('open_dashboard')}
-                        </Button>
-                    </div>
+                    <Button variant="destructive" onClick={handleStop} className="w-full h-7 text-xs">
+                        <CircleStop className="w-3 h-3 inline-block mr-1" />
+                        {t('stop')}
+                    </Button>
                 </div>
             )}
         </div>

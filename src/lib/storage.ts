@@ -17,9 +17,16 @@ export const storage = {
   onChange: (callback: (settings: StorageSettings) => void) => {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area === 'sync') {
-        const newSettings: any = {};
-        if (changes.theme) newSettings.theme = changes.theme.newValue;
-        if (changes.locale) newSettings.locale = changes.locale.newValue;
+        const newSettings: StorageSettings = {
+          theme: DEFAULT_SETTINGS.theme,
+          locale: DEFAULT_SETTINGS.locale,
+        };
+        if (changes.theme) {
+          newSettings.theme = changes.theme.newValue as StorageSettings['theme'];
+        }
+        if (changes.locale) {
+          newSettings.locale = changes.locale.newValue as StorageSettings['locale'];
+        }
         callback(newSettings);
       }
     });
