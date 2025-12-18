@@ -86,7 +86,10 @@
             "history_item_date": "时间",
             "view": "查看",
             "delete": "删除",
-            "reset_default": "重置为默认"
+            "reset_default": "重置为默认",
+            "preview_data": "预览数据",
+            "llm_request_preview": "LLM 请求预览",
+            "char_count": "{{count}} 个字符"
         }
     }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Play, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare } from 'lucide-react';
+import { X, Play, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare, Braces } from 'lucide-react';
 import { LLMService } from '@/lib/llm';
 import type { LLMConfig, LLMProviderType } from '@/lib/llm';
 import { db } from '@/lib/db';
@@ -56,6 +56,37 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
     const [testError, setTestError] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(true);
     const [history, setHistory] = useState<DbGeneratedPrompt[]>([]);
+    const [showPreview, setShowPreview] = useState(false);
+
+    const getContextData = () => {
+        return context.records.map(r => ({
+            sessionId: r.sessionId, // Include sessionId to link back to session info
+            url: r.url,
+            method: r.method,
+            reqBody: r.requestBody,
+            resBody: r.responseBody, // careful with size
+            status: r.responseStatus
+        }));
+    };
+
+    const constructMetaPrompt = () => {
+        // Prepare context
+        const contextData = getContextData();
+
+        // Format Session Info
+        const sessionInfo = context.sessions.map(s =>
+            `- Session: ${s.description || 'No Description'} (Time: ${new Date(s.startTime).toLocaleString()})`
+        ).join('\n');
+
+        // Meta Prompt Construction
+        const template = config.metaPromptTemplate || DEFAULT_META_PROMPT_TEMPLATE;
+        return template
+            .replace('{{context_type}}', context.type === 'domain' ? 'multiple user sessions' : 'a user session')
+            .replace('{{context_name}}', context.name)
+            .replace('{{session_info}}', sessionInfo)
+            .replace('{{goal}}', requirements || t('workbench.meta_prompt_goal_default'))
+            .replace('{{data}}', JSON.stringify(contextData, null, 2).slice(0, 50000) + (JSON.stringify(contextData).length > 50000 ? '\n// Truncated...' : ''));
+    };
 
     const loadHistory = async () => {
         try {
@@ -118,30 +149,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
         try {
             const llm = new LLMService(config);
 
-            // Prepare context
-            // Prepare context
-            const contextData = context.records.map(r => ({
-                sessionId: r.sessionId, // Include sessionId to link back to session info
-                url: r.url,
-                method: r.method,
-                reqBody: r.requestBody,
-                resBody: r.responseBody, // careful with size
-                status: r.responseStatus
-            }));
-
-            // Format Session Info
-            const sessionInfo = context.sessions.map(s =>
-                `- Session: ${s.description || 'No Description'} (Time: ${new Date(s.startTime).toLocaleString()})`
-            ).join('\n');
-
-            // Meta Prompt Construction
-            const template = config.metaPromptTemplate || DEFAULT_META_PROMPT_TEMPLATE;
-            const metaPrompt = template
-                .replace('{{context_type}}', context.type === 'domain' ? 'multiple user sessions' : 'a user session')
-                .replace('{{context_name}}', context.name)
-                .replace('{{session_info}}', sessionInfo)
-                .replace('{{goal}}', requirements || t('workbench.meta_prompt_goal_default'))
-                .replace('{{data}}', JSON.stringify(contextData, null, 2).slice(0, 50000) + (JSON.stringify(contextData).length > 50000 ? '\n// Truncated...' : ''));
+            const metaPrompt = constructMetaPrompt();
 
             const result = await llm.generate(metaPrompt, t('workbench.meta_prompt_role'));
             setGeneratedPrompt(result);
@@ -255,7 +263,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                 </div>
 
                                 {activeTab === 'history' ? (
-                                    <div className="flex-1 overflow-y-auto p-4 pt-2 space-y-3 min-h-[300px] max-h-[500px]">
+                                    <div className="overflow-y-auto p-4 space-y-3 h-[400px]">
                                         {history.length === 0 ? (
                                             <div className="text-center py-8 text-muted-foreground text-xs">
                                                 {t('workbench.history_empty')}
@@ -423,7 +431,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="p-4 pt-1 space-y-3">
+                                    <div className="p-4 pt-2 space-y-3">
                                         <div className="space-y-1.5">
                                             <div className="flex items-center justify-between">
                                                 <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Template Content</label>
@@ -437,7 +445,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                 </Button>
                                             </div>
                                             <textarea
-                                                className="w-full h-[200px] rounded-md border border-input bg-background px-3 py-2 text-xs font-mono shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                                                className="w-full h-[300px] rounded-md border border-input bg-background px-3 py-2 text-xs font-mono shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                                                 value={config.metaPromptTemplate}
                                                 onChange={(e) => saveConfig({ ...config, metaPromptTemplate: e.target.value })}
                                                 spellCheck={false}
@@ -461,19 +469,30 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                     onChange={(e) => setRequirements(e.target.value)}
                                 />
                             </div>
-                            <Button className="w-full shrink-0" onClick={handleGenerate} disabled={isGenerating}>
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        {t('workbench.generating')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play className="mr-2 h-4 w-4" />
-                                        {t('workbench.generate')}
-                                    </>
-                                )}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="shrink-0"
+                                    onClick={() => setShowPreview(true)}
+                                    title={t('workbench.preview_data') || 'Preview Data'}
+                                >
+                                    <Braces className="h-4 w-4" />
+                                </Button>
+                                <Button className="flex-1 shrink-0" onClick={handleGenerate} disabled={isGenerating}>
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            {t('workbench.generating')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play className="mr-2 h-4 w-4" />
+                                            {t('workbench.generate')}
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
@@ -502,6 +521,29 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                     </div>
                 </div>
             </div>
+
+            {showPreview && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="w-full max-w-4xl h-[80vh] bg-background border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-semibold text-sm">{t('workbench.llm_request_preview')}</h3>
+                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                    {t('workbench.char_count', { count: constructMetaPrompt().length })}
+                                </span>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowPreview(false)}>
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="flex-1 overflow-auto p-4">
+                            <pre className="text-xs font-mono whitespace-pre-wrap break-all">
+                                {constructMetaPrompt()}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

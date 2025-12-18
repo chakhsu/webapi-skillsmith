@@ -86,7 +86,10 @@
             "history_item_date": "Date",
             "view": "View",
             "delete": "Delete",
-            "reset_default": "Reset Default"
+            "reset_default": "Reset Default",
+            "preview_data": "Preview Data",
+            "llm_request_preview": "LLM Request Preview",
+            "char_count": "{{count}} characters"
         }
     }
 }
