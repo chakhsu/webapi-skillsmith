@@ -1,4 +1,4 @@
-import { X, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
+import { X, Trash2, ChevronRight, ChevronDown, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import type { DbHttpRecord } from '@/lib/db';
@@ -27,6 +27,35 @@ function CollapsibleSection({ title, children, defaultOpen = true }: { title: st
                     {children}
                 </div>
             )}
+        </div>
+    );
+}
+
+function SectionWithCopy({ title, content, children }: { title: string, content: string, children: React.ReactNode }) {
+    const { t } = useTranslation('options');
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className="border rounded-md overflow-hidden mb-2 last:mb-0">
+            <div className="bg-muted/50 px-3 py-1.5 border-b flex justify-between items-center h-8">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">{title}</span>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 hover:bg-background hover:text-foreground text-muted-foreground"
+                    onClick={handleCopy}
+                    title={t('workbench.copy') || 'Copy'}
+                >
+                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                </Button>
+            </div>
+            {children}
         </div>
     );
 }
@@ -66,7 +95,7 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
         <div className="fixed inset-0 z-[100] flex justify-end !m-0">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0"
                 onClick={onClose}
             />
 
@@ -111,20 +140,18 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
                         {/* Request */}
                         <CollapsibleSection title="Request">
                             {record.requestHeaders && Object.keys(record.requestHeaders).length > 0 && (
-                                <div className="border rounded-md overflow-hidden mb-2">
-                                    <div className="bg-muted/50 px-3 py-1.5 border-b text-[10px] font-bold text-muted-foreground uppercase">Headers</div>
+                                <SectionWithCopy title="Headers" content={JSON.stringify(record.requestHeaders, null, 2)}>
                                     <div className="p-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto max-h-60 overflow-y-auto bg-card">
                                         {JSON.stringify(record.requestHeaders, null, 2)}
                                     </div>
-                                </div>
+                                </SectionWithCopy>
                             )}
                             {hasRequestBody && (
-                                <div className="border rounded-md overflow-hidden">
-                                    <div className="bg-muted/50 px-3 py-1.5 border-b text-[10px] font-bold text-muted-foreground uppercase">Body</div>
+                                <SectionWithCopy title="Body" content={formatBody(record.requestBody)}>
                                     <div className="p-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto bg-card">
                                         {formatBody(record.requestBody)}
                                     </div>
-                                </div>
+                                </SectionWithCopy>
                             )}
                             {!hasRequestBody && (!record.requestHeaders || Object.keys(record.requestHeaders).length === 0) && (
                                 <div className="text-xs text-muted-foreground italic pl-2">No request details available.</div>
@@ -134,20 +161,18 @@ export default function RequestDrawer({ record, onClose, onDelete, isOpen }: Pro
                         {/* Response */}
                         <CollapsibleSection title="Response">
                             {record.responseHeaders && Object.keys(record.responseHeaders).length > 0 && (
-                                <div className="border rounded-md overflow-hidden mb-2">
-                                    <div className="bg-muted/50 px-3 py-1.5 border-b text-[10px] font-bold text-muted-foreground uppercase">Headers</div>
+                                <SectionWithCopy title="Headers" content={JSON.stringify(record.responseHeaders, null, 2)}>
                                     <div className="p-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto max-h-60 overflow-y-auto bg-card">
                                         {JSON.stringify(record.responseHeaders, null, 2)}
                                     </div>
-                                </div>
+                                </SectionWithCopy>
                             )}
                             {hasResponseBody && (
-                                <div className="border rounded-md overflow-hidden">
-                                    <div className="bg-muted/50 px-3 py-1.5 border-b text-[10px] font-bold text-muted-foreground uppercase">Body</div>
+                                <SectionWithCopy title="Body" content={formatBody(record.responseBody)}>
                                     <div className="p-3 text-xs font-mono whitespace-pre-wrap overflow-x-auto bg-card">
                                         {formatBody(record.responseBody)}
                                     </div>
-                                </div>
+                                </SectionWithCopy>
                             )}
                             {!hasResponseBody && (!record.responseHeaders || Object.keys(record.responseHeaders).length === 0) && (
                                 <div className="text-xs text-muted-foreground italic pl-2">No response details available.</div>
