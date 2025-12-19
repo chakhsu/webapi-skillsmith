@@ -15,7 +15,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { X, PartyPopper, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare, Braces } from 'lucide-react';
+import { X, PartyPopper, Copy, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare, Braces } from 'lucide-react';
 import { LLMService } from '@/lib/llm';
 import type { LLMConfig, LLMProviderType, TokenUsage } from '@/lib/llm';
 import { db } from '@/lib/db';
@@ -139,7 +139,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
 
     const handleTestConnection = async () => {
         setIsTesting(true);
-        setTestStatus('idle');
+        // setTestStatus('idle'); // Keep previous status during testing
         try {
             const llm = new LLMService(config);
             const result = await llm.testConnection();
@@ -387,7 +387,11 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                 onClick={handleTestConnection}
                                                 disabled={isTesting}
                                             >
-                                                {isTesting ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Check className="h-3 w-3 mr-2" />}
+                                                <div className={`h-2 w-2 rounded-full mr-2 transition-colors ${
+                                                    testStatus === 'success' ? 'bg-green-500' :
+                                                    testStatus === 'error' ? 'bg-red-500' :
+                                                    'bg-zinc-400 dark:bg-zinc-500'
+                                                }`} />
                                                 {t('workbench.test_connection')}
                                             </Button>
                                             <Button
