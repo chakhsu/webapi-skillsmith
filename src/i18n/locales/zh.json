@@ -88,8 +88,17 @@
             "delete": "删除",
             "reset_default": "重置为默认",
             "preview_data": "预览数据",
-            "llm_request_preview": "LLM 请求预览",
-            "char_count": "{{count}} 个字符"
+            "template_content": "模板内容",
+            "available_variables": "可用变量",
+            "provider_options": {
+                "openai": "OpenAI",
+                "custom": "自定义 (兼容 OpenAI)"
+            },
+            "auth_type_options": {
+                "api_key": "API Key (api-key Header)",
+                "bearer": "Bearer Token (Authorization Header)"
+            },
+            "confirm_delete_history": "确定要删除这条历史记录吗？"
         }
     }
 }

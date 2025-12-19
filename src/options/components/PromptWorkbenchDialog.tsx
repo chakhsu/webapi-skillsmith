@@ -272,8 +272,8 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                     value={config.provider}
                                                     onChange={(e) => saveConfig({ ...config, provider: e.target.value as LLMProviderType })}
                                                 >
-                                                    <option value="openai">OpenAI</option>
-                                                    <option value="custom">Custom (Any OpenAI Compatible)</option>
+                                                    <option value="openai">{t('workbench.provider_options.openai')}</option>
+                                                    <option value="custom">{t('workbench.provider_options.custom')}</option>
                                                 </select>
                                             </div>
                                             <div className="space-y-1.5">
@@ -302,8 +302,8 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                         value={config.authType || 'api-key'}
                                                         onChange={(e) => saveConfig({ ...config, authType: e.target.value as 'bearer' | 'api-key' })}
                                                     >
-                                                        <option value="api-key">API Key (api-key Header)</option>
-                                                        <option value="bearer">Bearer Token (Authorization Header)</option>
+                                                        <option value="api-key">{t('workbench.auth_type_options.api_key')}</option>
+                                                        <option value="bearer">{t('workbench.auth_type_options.bearer')}</option>
                                                     </select>
                                                 </div>
                                             )}
@@ -383,7 +383,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                     <div className="p-4 pt-2 space-y-3">
                                         <div className="space-y-1.5">
                                             <div className="flex items-center justify-between">
-                                                <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Template Content</label>
+                                                <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.template_content')}</label>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -400,7 +400,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                 spellCheck={false}
                                             />
                                             <p className="text-[10px] text-muted-foreground">
-                                                Available variables: <code className="bg-muted px-1 rounded">{'{{context_type}}'}</code>, <code className="bg-muted px-1 rounded">{'{{context_name}}'}</code>, <code className="bg-muted px-1 rounded">{'{{session_info}}'}</code>, <code className="bg-muted px-1 rounded">{'{{goal}}'}</code>, <code className="bg-muted px-1 rounded">{'{{data}}'}</code>
+                                                {t('workbench.available_variables')}: <code className="bg-muted px-1 rounded">{'{{context_type}}'}</code>, <code className="bg-muted px-1 rounded">{'{{context_name}}'}</code>, <code className="bg-muted px-1 rounded">{'{{session_info}}'}</code>, <code className="bg-muted px-1 rounded">{'{{goal}}'}</code>, <code className="bg-muted px-1 rounded">{'{{data}}'}</code>
                                             </p>
                                         </div>
                                     </div>
@@ -441,7 +441,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                             className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
-                                                                if (confirm('Delete this history item?')) {
+                                                                if (confirm(t('workbench.confirm_delete_history'))) {
                                                                     await db.generatedPrompts.delete(item.id!);
                                                                     loadHistory();
                                                                 }
@@ -500,7 +500,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                     </div>
 
                     {/* Right Panel: Output */}
-                    <div className="flex-1 flex flex-col bg-muted/10 border-l">
+                    <div className="flex-1 flex flex-col bg-muted/10">
                         <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/20">
                             <label className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.output')}</label>
                             <div className="flex items-center gap-2">

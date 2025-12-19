@@ -88,8 +88,17 @@
             "delete": "Delete",
             "reset_default": "Reset Default",
             "preview_data": "Preview Data",
-            "llm_request_preview": "LLM Request Preview",
-            "char_count": "{{count}} characters"
+            "template_content": "Template Content",
+            "available_variables": "Available variables",
+            "provider_options": {
+                "openai": "OpenAI",
+                "custom": "Custom (Any OpenAI Compatible)"
+            },
+            "auth_type_options": {
+                "api_key": "API Key (api-key Header)",
+                "bearer": "Bearer Token (Authorization Header)"
+            },
+            "confirm_delete_history": "Delete this history item?"
         }
     }
 }
