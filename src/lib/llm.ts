@@ -13,8 +13,15 @@ export interface LLMConfig {
     metaPromptTemplate?: string;
 }
 
-export interface CompletionResponse {
+export interface TokenUsage {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+}
+
+export interface StreamResult {
     content: string;
+    usage?: TokenUsage;
 }
 
 type ChatMessage = {
@@ -111,7 +118,7 @@ export class LLMService {
         }
     }
 
-    async generateStream(prompt: string, systemPrompt: string | undefined, onChunk: (chunk: string) => void): Promise<string> {
+    async generateStream(prompt: string, systemPrompt: string | undefined, onChunk: (chunk: string) => void): Promise<StreamResult> {
         const { apiKey, baseUrl, modelName, maxTokens, temperature, authType } = this.config;
 
         // User requested simple implementation: baseUrl IS the full URL.
@@ -135,8 +142,16 @@ export class LLMService {
             messages: [
                 { role: 'user', content: prompt }
             ],
-            stream: true
+            stream: true,
+            // stream_options is needed for some providers (like OpenAI) to include usage in the last chunk
+            // However, not all providers support this or format it the same way.
+            // For now, we try to parse it if present.
+            // Note: TypeScript might complain if we add extra properties to body, so we cast to any if needed or update type.
         };
+
+        // Add stream_options for OpenAI compatibility to get usage
+        // @ts-expect-error - dynamic property
+        body.stream_options = { include_usage: true };
 
         if (systemPrompt) {
             body.messages.unshift({ role: 'system', content: systemPrompt });
@@ -170,6 +185,7 @@ export class LLMService {
             const decoder = new TextDecoder("utf-8");
             let fullText = "";
             let buffer = "";
+            let usage: TokenUsage | undefined;
 
             try {
                 while (true) {
@@ -193,6 +209,12 @@ export class LLMService {
                         try {
                             const json = JSON.parse(dataStr);
                             const content = json.choices?.[0]?.delta?.content || "";
+
+                            // Check for usage information
+                            if (json.usage) {
+                                usage = json.usage;
+                            }
+
                             if (content) {
                                 fullText += content;
                                 onChunk(content);
@@ -206,7 +228,7 @@ export class LLMService {
                 reader.releaseLock();
             }
 
-            return fullText;
+            return { content: fullText, usage };
         } catch (error) {
             console.error("LLM Streaming Generation Error:", error);
             throw error;

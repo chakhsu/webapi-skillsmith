@@ -16,6 +16,11 @@ export interface DbGeneratedPrompt {
     metaPrompt: string;
     contextName: string;
     modelName: string;
+    tokenUsage?: {
+        prompt: number;
+        completion: number;
+        total: number;
+    };
 }
 
 export class SkillSmithDatabase extends Dexie {

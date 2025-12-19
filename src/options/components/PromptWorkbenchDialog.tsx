@@ -2,9 +2,15 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { X, PartyPopper, Copy, Check, Settings2, Sparkles, Loader2, History as HistoryIcon, Trash2, Eye, RotateCcw, FileText, Eraser, BotMessageSquare, Braces } from 'lucide-react';
 import { LLMService } from '@/lib/llm';
-import type { LLMConfig, LLMProviderType } from '@/lib/llm';
+import type { LLMConfig, LLMProviderType, TokenUsage } from '@/lib/llm';
 import { db } from '@/lib/db';
 import type { DbHttpRecord, DbGeneratedPrompt } from '@/lib/db';
 
@@ -56,6 +62,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
     const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [testError, setTestError] = useState<string | null>(null);
     const [history, setHistory] = useState<DbGeneratedPrompt[]>([]);
+    const [tokenUsage, setTokenUsage] = useState<TokenUsage | undefined>();
     const [showPreview, setShowPreview] = useState(false);
 
     const getContextData = () => {
@@ -147,6 +154,7 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
     const handleGenerate = async () => {
         setIsGenerating(true);
         setGeneratedPrompt(''); // Clear previous output
+        setTokenUsage(undefined);
         setActiveSection(null); // Auto hide settings when starting
 
         try {
@@ -162,14 +170,23 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                 }
             );
 
+            if (result.usage) {
+                setTokenUsage(result.usage);
+            }
+
             // Auto-save to history
             try {
                 await db.generatedPrompts.add({
                     createdAt: Date.now(),
-                    promptContent: result,
+                    promptContent: result.content,
                     metaPrompt: metaPrompt,
                     contextName: context.name,
-                    modelName: config.modelName || 'gpt-4o'
+                    modelName: config.modelName || 'gpt-4o',
+                    tokenUsage: result.usage ? {
+                        prompt: result.usage.prompt_tokens,
+                        completion: result.usage.completion_tokens,
+                        total: result.usage.total_tokens
+                    } : undefined
                 });
                 // Refresh history if we are on that tab (though we switch view usually)
                 if (activeSection === 'history') loadHistory();
@@ -437,6 +454,15 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                                             className="h-6 w-6 text-muted-foreground hover:text-foreground"
                                                             onClick={() => {
                                                                 setGeneratedPrompt(item.promptContent);
+                                                                if (item.tokenUsage) {
+                                                                    setTokenUsage({
+                                                                        prompt_tokens: item.tokenUsage.prompt,
+                                                                        completion_tokens: item.tokenUsage.completion,
+                                                                        total_tokens: item.tokenUsage.total
+                                                                    });
+                                                                } else {
+                                                                    setTokenUsage(undefined);
+                                                                }
                                                             }}
                                                             title={t('workbench.view')}
                                                         >
@@ -509,7 +535,26 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                     {/* Right Panel: Output */}
                     <div className="flex-1 flex flex-col bg-muted/10">
                         <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/20">
-                            <label className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.output')}</label>
+                            <div className="flex items-center gap-2">
+                                <label className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.output')}</label>
+                                {tokenUsage && (
+                                    <TooltipProvider>
+                                        <Tooltip delayDuration={0}>
+                                            <TooltipTrigger asChild>
+                                                <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono cursor-help">
+                                                    {tokenUsage.total_tokens} tokens
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom" className="text-xs">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div>Prompt: {tokenUsage.prompt_tokens}</div>
+                                                    <div>Completion: {tokenUsage.completion_tokens}</div>
+                                                </div>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="sm" className="h-6 text-xs hover:bg-accent hover:text-accent-foreground" onClick={() => navigator.clipboard.writeText(generatedPrompt)}>
                                     <Copy className="h-3 w-3 mr-1.5" /> {t('workbench.copy')}
