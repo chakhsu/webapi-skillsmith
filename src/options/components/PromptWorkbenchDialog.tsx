@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -291,14 +298,18 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1.5">
                                                 <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.provider')}</label>
-                                                <select
-                                                    className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+                                                <Select
                                                     value={config.provider}
-                                                    onChange={(e) => saveConfig({ ...config, provider: e.target.value as LLMProviderType })}
+                                                    onValueChange={(value) => saveConfig({ ...config, provider: value as LLMProviderType })}
                                                 >
-                                                    <option value="openai">{t('workbench.provider_options.openai')}</option>
-                                                    <option value="custom">{t('workbench.provider_options.custom')}</option>
-                                                </select>
+                                                    <SelectTrigger className="h-8 w-full text-xs">
+                                                        <SelectValue placeholder={t('workbench.provider')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem className='text-xs' value="openai">{t('workbench.provider_options.openai')}</SelectItem>
+                                                        <SelectItem className='text-xs' value="custom">{t('workbench.provider_options.custom')}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             <div className="space-y-1.5">
                                                 <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.model_name')}</label>
@@ -321,14 +332,18 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                             {config.provider === 'custom' && (
                                                 <div className="space-y-1.5 col-span-2">
                                                     <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{t('workbench.auth_type')}</label>
-                                                    <select
-                                                        className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+                                                    <Select
                                                         value={config.authType || 'api-key'}
-                                                        onChange={(e) => saveConfig({ ...config, authType: e.target.value as 'bearer' | 'api-key' })}
+                                                        onValueChange={(value) => saveConfig({ ...config, authType: value as 'bearer' | 'api-key' })}
                                                     >
-                                                        <option value="api-key">{t('workbench.auth_type_options.api_key')}</option>
-                                                        <option value="bearer">{t('workbench.auth_type_options.bearer')}</option>
-                                                    </select>
+                                                        <SelectTrigger className="h-8 w-full text-xs">
+                                                            <SelectValue placeholder={t('workbench.auth_type')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem className='text-xs' value="api-key">{t('workbench.auth_type_options.api_key')}</SelectItem>
+                                                            <SelectItem className='text-xs' value="bearer">{t('workbench.auth_type_options.bearer')}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             )}
                                             <div className="space-y-1.5 col-span-2">

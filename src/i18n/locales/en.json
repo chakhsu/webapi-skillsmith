@@ -92,7 +92,7 @@
             "available_variables": "Available variables",
             "provider_options": {
                 "openai": "OpenAI",
-                "custom": "Custom (Any OpenAI Compatible)"
+                "custom": "Any OpenAI Compatible"
             },
             "auth_type_options": {
                 "api_key": "API Key (api-key Header)",
