@@ -146,13 +146,21 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
 
     const handleGenerate = async () => {
         setIsGenerating(true);
+        setGeneratedPrompt(''); // Clear previous output
+        setActiveSection(null); // Auto hide settings when starting
+
         try {
             const llm = new LLMService(config);
 
             const metaPrompt = constructMetaPrompt();
 
-            const result = await llm.generate(metaPrompt, t('workbench.meta_prompt_role'));
-            setGeneratedPrompt(result);
+            const result = await llm.generateStream(
+                metaPrompt,
+                t('workbench.meta_prompt_role'),
+                (chunk) => {
+                    setGeneratedPrompt(prev => prev + chunk);
+                }
+            );
 
             // Auto-save to history
             try {
@@ -169,7 +177,6 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                 console.error("Failed to save prompt history", e);
             }
 
-            setActiveSection(null); // Auto hide settings on success
         } catch (e) {
             console.error(e);
             alert("Generation failed. Check console for details.");
