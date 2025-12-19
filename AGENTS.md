@@ -3,7 +3,7 @@
 This document provides high-level context, architectural decisions, and coding limitations for AI agents working on this codebase.
 
 ## 🎯 Project Goal
-**Web API SkillSmith** (formerly ActionTrace) is a Chrome Extension that records HTTP traffic and uses an embedded **LLM Prompt Workbench** to transform these traces into **AI Agent Skills** or **Tool Definitions**.
+**Web API SkillSmith** is a Chrome Extension that records HTTP traffic and uses an embedded **LLM Prompt Workbench** to transform these traces into **AI Agent Skills** or **Tool Definitions**.
 
 ## 🏗 Architecture
 - **Type**: Chrome Extension (Manifest V3).
@@ -21,7 +21,7 @@ The core differentiator. It takes raw HTTP records + Session Metadata and feeds 
 
 ### 2. Background Service
 - `src/background/debugger.ts`: Critical component. It manages the `chrome.debugger` lifecycle.
-- **Constraints**: 
+- **Constraints**:
     - Must handle browser warning banners.
     - Must handle large response bodies (streaming/chunking in future, currently full memory).
 

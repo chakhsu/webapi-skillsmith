@@ -98,6 +98,8 @@
                 "api_key": "API Key (api-key Header)",
                 "bearer": "Bearer Token (Authorization Header)"
             },
+            "llm_request_preview": "LLM 请求预览",
+            "char_count": "{{count}} 字符",
             "confirm_delete_history": "确定要删除这条历史记录吗？"
         }
     }

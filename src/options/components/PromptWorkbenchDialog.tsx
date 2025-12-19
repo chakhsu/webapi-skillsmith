@@ -528,21 +528,21 @@ export default function PromptWorkbench({ isOpen, onClose, context }: Props) {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="shrink-0"
+                                    className="shrink-0 h-9 w-9"
                                     onClick={() => setShowPreview(true)}
                                     title={t('workbench.preview_data') || 'Preview Data'}
                                 >
-                                    <Braces className="h-4 w-4" />
+                                    <Braces className="h-3 w-3" />
                                 </Button>
-                                <Button className="flex-1 shrink-0" onClick={handleGenerate} disabled={isGenerating}>
+                                <Button className="flex-1 shrink-0 h-9" onClick={handleGenerate} disabled={isGenerating}>
                                     {isGenerating ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                                             {t('workbench.generating')}
                                         </>
                                     ) : (
                                         <>
-                                            <Sparkles className="mr-2 h-4 w-4" />
+                                            <Sparkles className="mr-2 h-3 w-3" />
                                             {t('workbench.generate')}
                                         </>
                                     )}
